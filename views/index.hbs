@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css">
+    <title>Quản lý mã kích hoạt</title>
+    <style>
+        .table_hover tr:hover {
+            background-color: rgba(72, 96, 47, 0.7);
+            color: #fff;
+        }
+
+        .table-responsive {
+            overflow-y: auto;
+            overflow-x: auto;
+            height: 70vh;
+        }
+
+        .table {
+            width: 100%;
+        }
+
+        .title {
+            position: sticky;
+            top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <nav class="navbar navbar-light bg-light">
+            <h2 style="text-transform: uppercase">Quản lý mã kích hoạt</h2>
+        </nav>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="home-tab" data-bs-toggle="tab" data-bs-target="#home" type="button"
+                    role="tab" aria-controls="home" aria-selected="true">Quản lý mã kích hoạt</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab" data-bs-toggle="tab" data-bs-target="#profile" type="button"
+                    role="tab" aria-controls="profile" aria-selected="false">Quản lý tài khoản</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="mt-4">
+                    <button id="getCode" class="btn btn-primary" style="width: 2.5rem; height: 2.5rem;">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <p id="codeResult"></p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table_hover">
+                            <thead>
+                                <tr class="title" style="background-color: #48602f; color: #fff;">
+                                    <th scope="col">Id</th>
+                                    <th scope="col">Active Key</th>
+                                    <th scope="col">Device Id</th>
+                                    <th scope="col">Hash Key</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activationCodesTableBody">
+                                {{#each activationCodes}}
+                                <tr>
+                                    <td>{{this._id}}</td>
+                                    <td class="active_key">{{this.active_key}}</td>
+                                    <td>{{this.device_id}}</td>
+                                    <td>{{this.hash_key}}</td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <div class="mt-4">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table_hover">
+                            <thead>
+                                <tr class="title" style="background-color: #48602f; color: #fff;">
+                                    <th scope="col">Id</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">Password</th>
+                                    <th scope="col">Id Active Key</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountTableBody">
+                                {{#each accounts}}
+                                <tr>
+                                    <td>{{this._id}}</td>
+                                    <td class="active_key">{{this.username}}</td>
+                                    <td>{{this.password}}</td>
+                                    <td>{{this.id_active_key}}</td>
+                                </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        // Hàm để hiển thị danh sách mã kích hoạt và tài khoản
+        function updateTables(activationCodes, accounts) {
+            const activationCodesTableBody = document.getElementById('activationCodesTableBody');
+            activationCodesTableBody.innerHTML = '';
+            activationCodes.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="copy">${item._id}</td>
+                    <td class="copy">${item.active_key}</td>
+                    <td class="copy">${item.device_id}</td>
+                    <td class="copy">${item.hash_key}</td>
+                `;
+                activationCodesTableBody.appendChild(row);
+            });
+
+            const accountsTableBody = document.getElementById('accountTableBody');
+            accountsTableBody.innerHTML = '';
+
+            accounts.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="copy">${item._id}</td>
+                    <td class="copy">${item.username}</td>
+                    <td class="copy">${item.password}</td>
+                    <td class="copy">${item.id_active_key}</td>
+                `;
+                accountsTableBody.appendChild(row);
+            });
+
+            addClickEventToActiveKeys();
+        }
+
+        // Thêm sự kiện click cho các ô mã kích hoạt
+        function addClickEventToActiveKeys() {
+            const activeKeyCells = document.querySelectorAll('.copy');
+            activeKeyCells.forEach(cell => {
+                cell.addEventListener('click', function () {
+                    const textToCopy = this.innerText;
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => {
+                            Toastify({
+                                text: "Sao chép thành công: " + textToCopy,
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                            }).showToast();
+                        })
+                        .catch(err => {
+                            Toastify({
+                                text: "Lỗi khi sao chép: " + err,
+                                duration: 3000,
+                                gravity: "top",
+                                position: "right",
+                                backgroundColor: "linear-gradient(to right, #FF5733, #FFC300)",
+                            }).showToast();
+                        });
+                });
+            });
+        }
+
+        document.getElementById('getCode').addEventListener('click', function () {
+            fetch('http://localhost:8080/activation-code')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('codeResult').textContent = 'Activation Code: ' + data.active_key;
+
+                    return fetch('http://localhost:8080/save-activation-code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ active_key: data.active_key }),
+                    });
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        Toastify({
+                            text: data.message,
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "linear-gradient(to right, #00b09b, #96c93d)",
+                        }).showToast();
+                        fetchActivationCodes(); // Cập nhật bảng sau khi lưu thành công
+                    } else {
+                        Toastify({
+                            text: 'Error: ' + data.error,
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            backgroundColor: "linear-gradient(to right, #FF5733, #FFC300)",
+                        }).showToast();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        });
+
+        function fetchData() {
+            Promise.all([
+                fetch('http://localhost:8080/active-key').then(res => res.json()),
+                fetch('http://localhost:8080/get-account').then(res => res.json())
+            ])
+                .then(([activationCodes, accounts]) => {
+                    updateTables(activationCodes, accounts);
+                })
+                .catch(error => console.error('Error fetching data:', error));
+        }
+
+        // Gọi hàm để lấy và hiển thị mã kích hoạt và tài khoản khi tải trang
+        fetchData();
+        setInterval(fetchData, 3000);
+    </script>
+</body>
+
+</html>
